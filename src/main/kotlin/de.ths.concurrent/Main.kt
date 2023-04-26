@@ -7,19 +7,19 @@ import kotlin.random.Random
 
 fun main() = runBlocking {
     launchOrQuit(
-        onException = { println("Caught exception: ${it.message}") }
+        onError = { println("Caught exception: ${it.message}") }
     ) {
-        produceAndCollect()
+        produceAndConsume()
     }
 
     println("Happy End!")
 }
 
-suspend fun CoroutineScope.produceAndCollect() {
+suspend fun CoroutineScope.produceAndConsume() {
     val producer = produceNumbers()
 
     repeat(3) { id ->
-        processNumber(id, producer)
+        consumeNumbers(id, producer)
     }
 
     delay(2000)
@@ -33,7 +33,7 @@ fun CoroutineScope.produceNumbers() = produce {
     }
 }
 
-fun CoroutineScope.processNumber(
+fun CoroutineScope.consumeNumbers(
     id: Int,
     channel: ReceiveChannel<Int>
 ) = launch {
@@ -51,11 +51,11 @@ fun CoroutineScope.processNumber(
 }
 
 suspend fun launchOrQuit(
-    onException: (Throwable) -> Unit = {},
+    onError: (Throwable) -> Unit = {},
     block: suspend CoroutineScope.() -> Unit
 ): Job = supervisorScope {
     val handler = CoroutineExceptionHandler { _, throwable ->
-        onException(throwable)
+        onError(throwable)
     }
 
     launch(handler, block = block)
